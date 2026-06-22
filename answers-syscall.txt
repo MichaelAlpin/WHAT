@@ -1,0 +1,19 @@
+1. Looking at the backtrace output, which function called syscall?
+The function that called syscall is usertrap, from kernel/trap.c
+
+2. What is the value of p->trapframe->a7 and what does that value represent?
+The value of p->trapframe->a7 is 7 and it represents the number of the system call (telling us the call type - this time being exec)
+
+3. What was the previous mode that the CPU was in?
+The previous mode that the CPU was in is user mode
+
+4. Write down the assembly instruction the kernel is panicing at. Which register corresponds to the variable num?
+The instruction: lw	a3,0(zero)
+The register that corresponds to the variable num is a3
+
+5. Why does the kernel crash? is address 0 mapped in the kernel address space? Is that confirmed by the value in scause above?
+THe kernel crashes because we attempted to load a page that isn't mapped in the kernel address space
+The scause value being 0xD (13) confirms it, as code 13 stands for 'Load page fault'
+
+6. What is the name of the binary that was running when the kernel paniced? What is its process id (pid)?
+The name of the binary that was running when the kernel paniced is initcode, and its process id is 1
