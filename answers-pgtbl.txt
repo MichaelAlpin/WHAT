@@ -1,0 +1,24 @@
+1. Which other xv6 system call(s) could be made faster using this shared page? Explain how.
+
+Any system call that's about getting or setting an information about a current attribute of, for example, the current process,
+which does not involve performing a special operation like creating a new process, can be made faster using this shared page,
+as we can share the access to the information in the given page, and by that reduce the amount of kernel crossings.
+
+2. Explain the output of vmprint in terms of Fig 3-4 from the text. What does page 0 contain? What is in page 2?
+When running in user mode, could the process read/write the memory mapped by page 1? What does the third to last page contain?
+
+In the output we can see the linked list of all the mapped pages in our process.
+Each non-leaf can store at max 512 children, where leaf nodes are a mapping between virtual memory and physical one.
+
+We can also see the kernel address space arrangement:
+The last 3 pages (509,510,511) are the trampoline, trapframe and the pid pages.
+While the first several pages are the kernel text & data.
+
+- What does page 0 contain?
+Page 0 contains the kernel text - the instructions that the kernel reads and executes.
+- What is in page 2?
+In page 2 we can find some of the kernel data stored.
+- When running user mode, could the process read/write the memory mapped by page 1?
+Since the 2th, 3th and 5th bits on the PTE of page 1 are on, it means that the user can access the page and read/write its memory.
+- What does the third to last page contain?
+It contains the PID page we allocated in USYSCALL, right after we allocated the trampoline & trapframe pages, being the last 2 pages.

@@ -12,7 +12,7 @@ sys_exit(void)
   int n;
   argint(0, &n);
   exit(n);
-  return 0;  // not reached
+  return 0; // not reached
 }
 
 uint64
@@ -43,7 +43,7 @@ sys_sbrk(void)
 
   argint(0, &n);
   addr = myproc()->sz;
-  if(growproc(n) < 0)
+  if (growproc(n) < 0)
     return -1;
   return addr;
 }
@@ -54,12 +54,13 @@ sys_sleep(void)
   int n;
   uint ticks0;
 
-
   argint(0, &n);
   acquire(&tickslock);
   ticks0 = ticks;
-  while(ticks - ticks0 < n){
-    if(killed(myproc())){
+  while (ticks - ticks0 < n)
+  {
+    if (killed(myproc()))
+    {
       release(&tickslock);
       return -1;
     }
@@ -69,12 +70,38 @@ sys_sleep(void)
   return 0;
 }
 
-
 #ifdef LAB_PGTBL
-int
-sys_pgaccess(void)
+int sys_pgaccess(void)
 {
-  // lab pgtbl: your code here.
+  unsigned int starting_address;
+  int page_count;
+  unsigned int output_buffer;
+
+  // Retrieve the arguments
+  argint(0, (int *)&starting_address);
+  argint(1, &page_count);
+  argint(2, (int *)&output_buffer);
+
+  uint64 buffer = 0;
+
+  // Set an upper limit on the page scan amount
+  if (page_count > sizeof(buffer) * 8)
+  {
+    page_count = sizeof(buffer) * 8;
+  }
+
+  // Scan pages
+  for (int i = 0; i < page_count; i++)
+  {
+    pte_t *walk_result = walk(myproc()->pagetable, starting_address + i * PGSIZE, 0);
+    if ((unsigned long)*walk_result & PTE_A)
+    {
+      buffer |= 1 << i;
+      *walk_result &= ~PTE_A;
+    }
+  }
+
+  copyout(myproc()->pagetable, output_buffer, (char *)&buffer, sizeof(buffer));
   return 0;
 }
 #endif

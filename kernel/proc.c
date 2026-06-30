@@ -170,6 +170,8 @@ freeproc(struct proc *p)
 {
   if (p->trapframe)
     kfree((void *)p->trapframe);
+  if (p->pid_page)
+    kfree((void *)p->pid_page);
   p->trapframe = 0;
   p->pid_page = 0;
   if (p->pagetable)
