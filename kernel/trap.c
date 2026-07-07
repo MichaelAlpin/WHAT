@@ -93,7 +93,7 @@ void usertrap(void)
 
       // Save registers & Call the handler
       *p->pre_alarm_frame = *p->trapframe;
-      p->trapframe->epc = p->alarm_handler + 4;
+      p->trapframe->epc = p->alarm_handler;
     }
   }
 

@@ -1,13 +1,34 @@
 1. Which registers contain arguments to functions? For example, which register holds 13 in main's call to printf?
+
 The registers that contain the arguments to functions are a0, a1, a2, ..., a7 (or in our case, only a0, a1 and a2).
 For example, a2 holds 13 in main's call to printf.
-
+========================================================================================================================
 2. Where is the call to function f in the assembly code for main? Where is the call to g?
+
 Since the value of f(8)+1 is deterministic and isn't input depended, the compiler optimized the assembly by calculating
 the value ahead instead of putting a call to <f>. Another optimization that the compiler made is putting the main code
-of the one-liner function <g> - [addiw	a0,a0,3] - inside the function <f> that calls it - that's why we don't have a call to <g> inside <f>.
-
+of the one-liner function <g> - [addiw	a0,a0,3] - inside the function <f> that calls it -
+that's why we don't have a call to <g> inside <f>.
+========================================================================================================================
 3. At what address is the function printf located?
-printf is located at 0x630.
 
+printf is located at 0x640.
+========================================================================================================================
 4. What value is in the register ra just after the jalr to printf in main?
+
+After the jalr to prinft in main, PC+4 is being stored in ra, meaning the address of the next instruction - 0x38
+========================================================================================================================
+5. What is the output?
+If the RISC-V were instead big-endian what would you set i to in order to yield the same output? Would you need to change 57616 to a different value?
+
+The output is 'HE110 World'.
+If the RISC-V were instead big-endian I would set i to be its original value with the order of all its 4 bytes reversed: 0x646c7200
+I would not need to change 57616 to a different value, because the number would be stored in bytes with the order automatically matching
+the order that RISC-V sets between big-endian and little-endian, hence passing 57616 in decimal would print it the same in either setting.
+========================================================================================================================
+6. In the following code, what is going to be printed after 'y='? Why does this happen?
+
+After 'y=', the value of the register a2 (converted into decimal) is going to be printed.
+This happens because the arguments that printf takes along the actual string are stored in a1, a2, ect, and because in our string we pass "x=%d y=%d"
+but we only write 1 another argument, the assembly code of the program won't set a2 to anything, and the printf function will
+print a2 as it is, hence why we will see the decimal value of what a2 was being printed.
