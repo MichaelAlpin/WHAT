@@ -1,0 +1,13 @@
+1. Which registers contain arguments to functions? For example, which register holds 13 in main's call to printf?
+The registers that contain the arguments to functions are a0, a1, a2, ..., a7 (or in our case, only a0, a1 and a2).
+For example, a2 holds 13 in main's call to printf.
+
+2. Where is the call to function f in the assembly code for main? Where is the call to g?
+Since the value of f(8)+1 is deterministic and isn't input depended, the compiler optimized the assembly by calculating
+the value ahead instead of putting a call to <f>. Another optimization that the compiler made is putting the main code
+of the one-liner function <g> - [addiw	a0,a0,3] - inside the function <f> that calls it - that's why we don't have a call to <g> inside <f>.
+
+3. At what address is the function printf located?
+printf is located at 0x630.
+
+4. What value is in the register ra just after the jalr to printf in main?
