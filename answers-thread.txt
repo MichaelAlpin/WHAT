@@ -1,0 +1,19 @@
+1. Why are there missing keys with 2 threads, but not with 1 thread?
+
+When ph is run with more than 1 thread, they run concurrently, and because they concurrently insert items to the hash
+table on the same memory address space, they can perform the insertion on the table in an order that will make one thread cancel
+the insertion of the other.
+
+Example of a sequence of events with 2 threads that can lead to a key being missing:
+* The 2 threads both enter the 'put' function with the same [key % NBUCKET] value
+* Then, they both enter the 'insert' function
+* Both of the threads perform the first 4 lines:
+    struct entry *e = malloc(sizeof(struct entry));
+    e->key = key;
+    e->value = value;
+    e->next = n;
+* And then, both threads perform the last line:
+    *p = e;
+
+This will make both threads assign the new table[i] address to be e, and since both e values have the original table[i]
+address as the 'next' field, this will make table[i] bigger by just one node, instead of 2, causing keys to be lost.
