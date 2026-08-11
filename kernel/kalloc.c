@@ -19,6 +19,7 @@ struct run
   struct run *next;
 };
 
+// The freelist lists for the CPUs
 struct
 {
   struct spinlock lock;
@@ -27,10 +28,12 @@ struct
 
 void kinit()
 {
+  // Initialize all the locks
   for (int i = 0; i < NCPU; i++)
   {
     initlock(&kmem[i].lock, "kmem");
   }
+
   freerange(end, (void *)PHYSTOP);
 }
 
@@ -56,11 +59,12 @@ void kfree(void *pa)
   if (((uint64)pa % PGSIZE) != 0 || (char *)pa < end || (uint64)pa >= PHYSTOP)
     panic("kfree");
 
-  // Fill with junk to catch dangling refs.
+  // Fill with junk to catch dangling refs
   memset(pa, 1, PGSIZE);
 
   r = (struct run *)pa;
 
+  // Update the running CPU's free list
   acquire(&kmem[i].lock);
   r->next = kmem[i].freelist;
   kmem[i].freelist = r;
@@ -78,12 +82,12 @@ kalloc(void)
   push_off();
   int i = cpuid();
 
-  struct run *r = kmem[i].freelist;
-
   acquire(&kmem[i].lock);
 
+  struct run *r = kmem[i].freelist;
   if (r == 0)
   {
+    // Long route: the free list is empty, meaning we have to still some pages from a following CPU
     for (int j = 1; j < NCPU; j++)
     {
       if (kmem[(i + j) % NCPU].freelist > 0)
@@ -92,6 +96,7 @@ kalloc(void)
         struct run *traveler = kmem[(i + j) % NCPU].freelist;
         struct run *half_traveler = kmem[(i + j) % NCPU].freelist;
 
+        // Reach the middle of the free list of the other CPU, indexed i+j
         while (traveler > 0)
         {
           traveler = traveler->next;
@@ -103,13 +108,14 @@ kalloc(void)
 
         if (half_traveler == 0)
         {
-          // Empty the index i+j list in case this was it's last item
-          half_traveler = kmem[(i + j) % NCPU].freelist;
+          // Move the list from index i+j to index i when the list has only one item
+          kmem[i].freelist = kmem[(i + j) % NCPU].freelist;
           kmem[(i + j) % NCPU].freelist = 0;
         }
         else
         {
-          // Move half of the list from index i+j index to index i
+          // Move half of the list from index i+j to index i
+          kmem[i].freelist = half_traveler;
           for (struct run *scanner = kmem[(i + j) % NCPU].freelist; scanner != 0; scanner = scanner->next)
           {
             if (scanner->next == half_traveler)
@@ -119,7 +125,6 @@ kalloc(void)
             }
           }
         }
-        kmem[i].freelist = half_traveler;
 
         release(&kmem[(i + j) % NCPU].lock);
         break;
@@ -131,8 +136,9 @@ kalloc(void)
 
   if (r > 0)
   {
+    // When page is found, remove it from the CPU's free list and fill it with junk
     kmem[i].freelist = r->next;
-    memset((char *)r, 5, PGSIZE); // Fill with junk
+    memset((char *)r, 5, PGSIZE);
   }
 
   release(&kmem[i].lock);
